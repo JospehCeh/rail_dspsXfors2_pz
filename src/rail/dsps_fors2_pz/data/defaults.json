@@ -1,0 +1,58 @@
+{
+    "photoZ": {
+        "Z_GRID": {
+            "z_min": 0.01,
+            "z_max": 2.1,
+            "z_step": 0.1
+        },
+        "ssp_file": "default",
+        "Templates": {
+            "input": "templates/fitparams_mags+rews_1_to_10.h5",
+            "output": "SEDtempl_SPS_mags+rews_1_to_10.h5",
+            "overwrite": false
+        },
+        "Mode": "SPS",
+        "Filters": {
+            "0": {
+                "name": "cosmos_u_new",
+                "path": "filters/u_new.pb",
+                "transmission": "photons"
+            },
+            "1": {
+                "name": "hsc_gHSC",
+                "path": "filters/gHSC.pb",
+                "transmission": "photons"
+            },
+            "2": {
+                "name": "hsc_rHSC",
+                "path": "filters/rHSC.pb",
+                "transmission": "photons"
+            },
+            "3": {
+                "name": "hsc_iHSC",
+                "path": "filters/iHSC.pb",
+                "transmission": "photons"
+            },
+            "4": {
+                "name": "hsc_zHSC",
+                "path": "filters/zHSC.pb",
+                "transmission": "photons"
+            },
+            "5": {
+                "name": "hsc_yHSC",
+                "path": "filters/yHSC.pb",
+                "transmission": "photons"
+            }
+        },
+        "i_band_num": 3,
+        "Dataset": {
+            "path": "COSMOS2020_emu_hscOnly_CC_zinf3_noNaN.inp",
+            "type": "F"
+        },
+        "Estimator": "chi2",
+        "prior": true,
+        "use_colors": true,
+        "save results": true,
+        "run name": "photoZ_example_defaults"
+    }
+}

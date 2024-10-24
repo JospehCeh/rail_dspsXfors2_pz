@@ -1,0 +1,8 @@
+# Changes here will be overwritten by Copier
+_commit: v0.3.3
+_src_path: gh:LSSTDESC/RAIL-project-template
+author_email: lsst-desc-rail-admin@slac.stanford.edu
+author_name: LSST Dark Energy Science Collaboration (DESC)
+create_example_module: true
+package_name: dsps_fors2_pz
+project_name: pz-rail-dspsxfors2
