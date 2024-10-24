@@ -76,15 +76,15 @@ def main(args):
         # c_err = observ.AB_colerrs[observ.valid_colors]
         if inputs["photoZ"]["prior"] and observ.valid_filters[inputs["photoZ"]["i_band_num"]]:
             probz_dict = (
-                jax.tree_map(lambda sps_templ: posterior(sps_templ, observ), templates_dict, is_leaf=has_sps_template)
+                jax.tree_util.tree_map(lambda sps_templ: posterior(sps_templ, observ), templates_dict, is_leaf=has_sps_template)
                 if inputs["photoZ"]["use_colors"]
-                else jax.tree_map(lambda sps_templ: posterior_fluxRatio(sps_templ, observ), templates_dict, is_leaf=has_sps_template)
+                else jax.tree_util.tree_map(lambda sps_templ: posterior_fluxRatio(sps_templ, observ), templates_dict, is_leaf=has_sps_template)
             )
         else:
             probz_dict = (
-                jax.tree_map(lambda sps_templ: likelihood(sps_templ, observ), templates_dict, is_leaf=has_sps_template)
+                jax.tree_util.tree_map(lambda sps_templ: likelihood(sps_templ, observ), templates_dict, is_leaf=has_sps_template)
                 if inputs["photoZ"]["use_colors"]
-                else jax.tree_map(lambda sps_templ: likelihood_fluxRatio(sps_templ, observ), templates_dict, is_leaf=has_sps_template)
+                else jax.tree_util.tree_map(lambda sps_templ: likelihood_fluxRatio(sps_templ, observ), templates_dict, is_leaf=has_sps_template)
             )
         # z_phot_loc = jnp.nanargmin(chi2_arr)
         return probz_dict, observ.z_spec  # chi2_arr, z_phot_loc
@@ -92,7 +92,7 @@ def main(args):
     def is_obs(elt):
         return isinstance(elt, Observation)
 
-    tree_of_results_dict = jax.tree_map(lambda elt: extract_pdz(estim_zp(elt), z_grid), obs_arr, is_leaf=is_obs)
+    tree_of_results_dict = jax.tree_util.tree_map(lambda elt: extract_pdz(estim_zp(elt), z_grid), obs_arr, is_leaf=is_obs)
 
     if inputs["photoZ"]["save results"]:
         from .io_utils import photoZtoHDF5

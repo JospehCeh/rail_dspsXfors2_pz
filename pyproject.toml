@@ -80,7 +80,6 @@ disable = [
     "unreachable",
     "unspecified-encoding",
     "no-member",
-    "no-name-in-module",
     "not-callable"
 ]
 max-line-length = 200

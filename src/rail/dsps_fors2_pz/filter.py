@@ -3,16 +3,11 @@
 import os
 
 # import sedpy
-import pathlib
 from collections import namedtuple
 
 import jax.numpy as jnp
 import numpy as np
 from jax import jit
-
-# Place to store the filters for use with sedpy
-save_dir = os.path.abspath(os.path.join(".", "EmuLP", "data", "filters"))
-pathlib.Path(save_dir).mkdir(parents=True, exist_ok=True)
 
 lightspeed = 2.998e18  # AA/s
 ab_gnu = 3.631e-20  # AB reference spctrum in erg/s/cm^2/Hz

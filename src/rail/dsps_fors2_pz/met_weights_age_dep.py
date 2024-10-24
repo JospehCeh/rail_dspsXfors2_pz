@@ -1,14 +1,10 @@
 """
 Age-dependant metallicity helpers from Andrew Hearin ; January 2024
 """
-from dsps import (
-    calc_lgmet_weights_from_lognormal_mdf,
-    SSPWeights,
-    calc_age_weights_from_sfh_table,
-    RestSED,
-    _tw_sigmoid,
-    cumulative_mstar_formed
-)
+from dsps import calc_lgmet_weights_from_lognormal_mdf, calc_age_weights_from_sfh_table, cumulative_mstar_formed
+from dsps.sed.ssp_weights import SSPWeights
+from dsps.sed.stellar_sed import RestSED
+from dsps.utils import _tw_sigmoid
 from jax import jit as jjit
 from jax import numpy as jnp
 from jax import vmap
