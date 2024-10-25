@@ -136,3 +136,43 @@ def extract_pdz_allseds(pdf_res, z_grid):
         pdz_dict.update({key: {"p(z, sed)": joint_pdz, "SED evidence": evidence}})
     pdz_dict.update({"PDZ": jnp.nansum(pdf_arr, axis=0), "z_spec": zs})
     return pdz_dict
+
+
+def run_from_inputs(inputs):
+    from rail.dsps_fors2_pz import Observation, SPS_Templates, likelihood, likelihood_fluxRatio, load_data_for_run, posterior, posterior_fluxRatio
+
+    z_grid, templates_dict, obs_arr = load_data_for_run(inputs)
+
+    print("Photometric redshift estimation (please be patient, this may take a couple of hours on large datasets) :")
+
+    def has_sps_template(cont):
+        return isinstance(cont, SPS_Templates)
+
+    # @partial(jit, static_argnums=1)
+    # def estim_zp(observ, prior=True):
+    # @jit
+    def estim_zp(observ):
+        # c = observ.AB_colors[observ.valid_colors]
+        # c_err = observ.AB_colerrs[observ.valid_colors]
+        if inputs["photoZ"]["prior"] and observ.valid_filters[inputs["photoZ"]["i_band_num"]]:
+            probz_dict = (
+                jax.tree_util.tree_map(lambda sps_templ: posterior(sps_templ, observ), templates_dict, is_leaf=has_sps_template)
+                if inputs["photoZ"]["use_colors"]
+                else jax.tree_util.tree_map(lambda sps_templ: posterior_fluxRatio(sps_templ, observ), templates_dict, is_leaf=has_sps_template)
+            )
+        else:
+            probz_dict = (
+                jax.tree_util.tree_map(lambda sps_templ: likelihood(sps_templ, observ), templates_dict, is_leaf=has_sps_template)
+                if inputs["photoZ"]["use_colors"]
+                else jax.tree_util.tree_map(lambda sps_templ: likelihood_fluxRatio(sps_templ, observ), templates_dict, is_leaf=has_sps_template)
+            )
+        # z_phot_loc = jnp.nanargmin(chi2_arr)
+        return probz_dict, observ.z_spec  # chi2_arr, z_phot_loc
+
+    def is_obs(elt):
+        return isinstance(elt, Observation)
+
+    tree_of_results_dict = jax.tree_util.tree_map(lambda elt: extract_pdz(estim_zp(elt), z_grid), obs_arr, is_leaf=is_obs)
+    print('All done !')
+
+    return tree_of_results_dict

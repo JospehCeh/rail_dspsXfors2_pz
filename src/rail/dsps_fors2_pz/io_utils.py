@@ -253,6 +253,7 @@ def load_data_for_run(inp_glob):
     # sps_temp_pkl = os.path.abspath(inputs["Templates"])
     # sps_par_dict = read_params(sps_temp_pkl)
     if inputs["Templates"]["overwrite"] or not os.path.isfile(os.path.abspath(inputs["Templates"]["output"])):
+        print("Creating new templates - please be patient, this may take several minutes to complete :")
         sps_temp_h5 = os.path.abspath(os.path.join(PZDATALOC, inputs["Templates"]["input"]))
         sps_par_dict = readDSPSHDF5(sps_temp_h5)
         if "sps" in inputs["Mode"].lower():
@@ -261,6 +262,7 @@ def load_data_for_run(inp_glob):
             templ_dict = jax.tree_util.tree_map(lambda dico: make_legacy_templates(dico, Xfilt, z_grid, ssp_data, id_imag=inputs["i_band_num"]), sps_par_dict, is_leaf=has_redshift)
         _ = templatesToHDF5(inputs["Templates"]["output"], templ_dict)
     else:
+        print("Existing templates found ! Let us use those and save some time.")
         templ_dict = readTemplatesHDF5(inputs["Templates"]["output"])
 
     print("Loading observations :")
@@ -284,4 +286,5 @@ def load_data_for_run(inp_glob):
             obs_arr.extend([observ])
         except AssertionError:
             pass
+    print("All data loaded and ready for use !")
     return z_grid, templ_dict, obs_arr
