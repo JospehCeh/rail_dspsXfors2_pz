@@ -1,4 +1,4 @@
-from .analysis import extract_pdz, extract_pdz_allseds, extract_pdz_fromchi2
+from .analysis import extract_pdz, extract_pdz_allseds, extract_pdz_fromchi2, run_from_inputs
 from .cosmology import Cosmo, make_jcosmo, nz_prior_core, prior_alpt0, prior_ft, prior_kt, prior_ktf, prior_pcal, prior_zot
 from .filter import NIR_filt, NUV_filt, ab_mag, get_2lists, load_filt, sedpyFilter
 from .galaxy import (
@@ -82,5 +82,6 @@ __all__ = [
     "photoZtoHDF5",
     "readPhotoZHDF5",
     "readDSPSHDF5",
-    "has_redshift"
+    "has_redshift",
+    "run_from_inputs"
 ]
