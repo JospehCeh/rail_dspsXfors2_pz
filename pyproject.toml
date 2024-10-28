@@ -29,7 +29,7 @@ dependencies = [
     "interpax",
     "jax_cosmo",
     "rail",
-    "rail_dsps"
+    "pz-rail-dsps"
 ]
 
 # On a mac, install optional dependencies with `pip install '.[dev]'` (include the single quotes)
