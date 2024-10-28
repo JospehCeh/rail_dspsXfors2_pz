@@ -27,7 +27,9 @@ dependencies = [
     "jax",
     "jaxlib",
     "interpax",
-    "jax_cosmo"
+    "jax_cosmo",
+    "rail",
+    "rail_dsps"
 ]
 
 # On a mac, install optional dependencies with `pip install '.[dev]'` (include the single quotes)

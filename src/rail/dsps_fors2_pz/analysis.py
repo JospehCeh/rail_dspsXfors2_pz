@@ -139,6 +139,13 @@ def extract_pdz_allseds(pdf_res, z_grid):
 
 
 def run_from_inputs(inputs):
+    """run_from_inputs Run the photometric redshifts estimation with the given input settings.
+
+    :param inputs: Input settings for the photoZ run. Can be loaded from a `JSON` file using `process_fors2.fetchData.json_to_inputs`.
+    :type inputs: dict
+    :return: Photo-z estimation results. These are not written to disk within this function.
+    :rtype: list (tree-like)
+    """
     from rail.dsps_fors2_pz import Observation, SPS_Templates, likelihood, likelihood_fluxRatio, load_data_for_run, posterior, posterior_fluxRatio
 
     z_grid, templates_dict, obs_arr = load_data_for_run(inputs)
