@@ -7,6 +7,14 @@ import jax_cosmo as jc
 from jax import jit
 from jax import numpy as jnp
 
+try:
+    from jax.numpy import trapezoid
+except ImportError:
+    try:
+        from jax.scipy.integrate import trapezoid
+    except ImportError:
+        from jax.numpy import trapz as trapezoid
+
 # pi
 # pi = 3.14159265359 #on utilise np.pi
 # c
@@ -198,7 +206,7 @@ def distMet(cosmo, z):
         dz = z / 50.0
         zi = jnp.linspace(0.5 * dz, z, num=50)
         Ez = jnp.power((cosmo.om0 * jnp.power((1.0 + zi), 3.0) + (1 - cosmo.om0 - cosmo.l0) * jnp.power((1.0 + zi), 2.0) + cosmo.l0), -0.5)
-        _sum = jnp.trapz(Ez, zi)
+        _sum = trapezoid(Ez, zi)
         # for i in range(50):
         #    zi = (i+0.5)*dz
         #    Ez = jnp.sqrt(cosmo.om0*jnp.power((1.+zi),3.)+(1-cosmo.om0-cosmo.l0)*jnp.power((1.+zi),2.)+cosmo.l0)

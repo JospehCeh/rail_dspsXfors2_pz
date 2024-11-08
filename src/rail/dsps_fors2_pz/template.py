@@ -22,7 +22,13 @@ from diffstar.defaults import DiffstarUParams  # , DEFAULT_Q_PARAMS
 from rail.dsps import calc_obs_mag, calc_rest_mag, DEFAULT_COSMOLOGY, age_at_z
 from dsps.dust.att_curves import _frac_transmission_from_k_lambda, sbl18_k_lambda
 from interpax import interp1d
-from jax.numpy import trapezoid as trapz
+try:
+    from jax.numpy import trapezoid
+except ImportError:
+    try:
+        from jax.scipy.integrate import trapezoid
+    except ImportError:
+        from jax.numpy import trapz as trapezoid
 from astropy import constants as const
 
 from .met_weights_age_dep import calc_rest_sed_sfh_table_lognormal_mdf_agedep
@@ -253,7 +259,7 @@ def calc_eqw(sur_wls, sur_spec, lin):
     nancont = jnp.where((sur_wls > lin - cont_wid) * (sur_wls < lin - line_wid) + (sur_wls > lin + line_wid) * (sur_wls < lin + cont_wid), sur_spec, jnp.nan)
     height = jnp.nanmean(nancont)
     vals = jnp.where((sur_wls > lin - line_wid) * (sur_wls < lin + line_wid), sur_spec / height - 1.0, 0.0)
-    ew = trapz(vals, x=sur_wls)
+    ew = trapezoid(vals, x=sur_wls)
     return ew
 
 

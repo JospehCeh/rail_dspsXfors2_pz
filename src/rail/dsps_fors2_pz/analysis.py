@@ -24,6 +24,14 @@
 import jax
 from jax import numpy as jnp
 
+try:
+    from jax.numpy import trapezoid
+except ImportError:
+    try:
+        from jax.scipy.integrate import trapezoid
+    except ImportError:
+        from jax.numpy import trapz as trapezoid
+
 
 """
 Reminder :
@@ -40,7 +48,7 @@ DustLaw = namedtuple('DustLaw', ['name', 'EBV', 'transmission'])
 
 @jax.jit
 def _cdf(z, pdz):
-    cdf = jnp.array([jnp.trapezoid(pdz[:i], x=z[:i]) for i in range(len(z))])
+    cdf = jnp.array([trapezoid(pdz[:i], x=z[:i]) for i in range(len(z))])
     return cdf
 
 
@@ -66,19 +74,19 @@ def extract_pdz(pdf_res, z_grid):
     zs = pdf_res[1]
     pdf_arr = jnp.array([pdf_templ for _, pdf_templ in pdf_dict.items()])
     # print(f"DEBUG extract_pdz : {exp_arr.shape}")
-    _n2 = jnp.trapezoid(jnp.nansum(pdf_arr, axis=0), x=z_grid)
+    _n2 = trapezoid(jnp.nansum(pdf_arr, axis=0), x=z_grid)
     pdf_arr = pdf_arr / _n2
     pdz_dict = {}
     for key, val in pdf_dict.items():
         joint_pdz = val / _n2
-        evidence = jnp.trapezoid(joint_pdz, x=z_grid)
+        evidence = trapezoid(joint_pdz, x=z_grid)
         z_ml = z_grid[jnp.nanargmax(joint_pdz)]
-        z_avg = jnp.trapezoid(z_grid * joint_pdz / evidence, x=z_grid)
+        z_avg = trapezoid(z_grid * joint_pdz / evidence, x=z_grid)
         pdz_dict.update({key: {"evidence_SED": evidence, "z_ML_SED": z_ml, "z_mean_SED": z_avg}})
     pdz = jnp.nansum(pdf_arr, axis=0)
     z_med = _median(z_grid, pdz)
     z_ML = z_grid[jnp.nanargmax(pdz)]
-    z_MEAN = jnp.trapezoid(z_grid * pdz, x=z_grid)
+    z_MEAN = trapezoid(z_grid * pdz, x=z_grid)
     pdz_dict.update({"PDZ": jnp.column_stack((z_grid, pdz)), "z_spec": zs, "z_ML": z_ML, "z_mean": z_MEAN, "z_med": z_med})
     return pdz_dict
 
@@ -100,13 +108,13 @@ def extract_pdz_fromchi2(chi2_res, z_grid):
     chi2_arr = chi2_arr - _n1  # 10 * chi2_arr / _n1
     exp_arr = jnp.exp(-0.5 * chi2_arr)
     # print(f"DEBUG extract_pdz : {exp_arr.shape}")
-    _n2 = jnp.trapezoid(jnp.nansum(exp_arr, axis=0), x=z_grid)
+    _n2 = trapezoid(jnp.nansum(exp_arr, axis=0), x=z_grid)
     exp_arr = exp_arr / _n2
     pdz_dict = {}
     for key, val in chi2_dict.items():
         chiarr = val - _n1
         joint_pdz = jnp.exp(-0.5 * chiarr) / _n2
-        evidence = jnp.trapezoid(joint_pdz, x=z_grid)
+        evidence = trapezoid(joint_pdz, x=z_grid)
         pdz_dict.update({key: {"SED evidence": evidence}})
     pdz_dict.update({"PDZ": jnp.column_stack((z_grid, jnp.nansum(exp_arr, axis=0))), "z_spec": zs})
     return pdz_dict
@@ -127,12 +135,12 @@ def extract_pdz_allseds(pdf_res, z_grid):
     zs = pdf_res[1]
     pdf_arr = jnp.array([pdf_templ for _, pdf_templ in pdf_dict.items()])
     # print(f"DEBUG extract_pdz : {exp_arr.shape}")
-    _n2 = jnp.trapezoid(jnp.nansum(pdf_arr, axis=0), x=z_grid)
+    _n2 = trapezoid(jnp.nansum(pdf_arr, axis=0), x=z_grid)
     pdf_arr = pdf_arr / _n2
     pdz_dict = {}
     for key, val in pdf_dict.items():
         joint_pdz = val / _n2
-        evidence = jnp.trapezoid(joint_pdz, x=z_grid)
+        evidence = trapezoid(joint_pdz, x=z_grid)
         pdz_dict.update({key: {"p(z, sed)": joint_pdz, "SED evidence": evidence}})
     pdz_dict.update({"PDZ": jnp.nansum(pdf_arr, axis=0), "z_spec": zs})
     return pdz_dict
