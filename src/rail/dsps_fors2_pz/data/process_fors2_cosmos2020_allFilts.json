@@ -6,7 +6,7 @@
             "z_step": 0.01
         },
         "Templates": {
-            "input": "/pbs/home/j/jocheval/ln_sps_photoz/jocheval/runProcessFors2/DSPS_hdf5_fit_mags+rews/fitparams_mags+rews_1_to_37.h5",
+            "input": "templates/fitparams_mags+rews_1_to_37.h5",
             "output": "SEDtempl_SPS_mags+rews_1_to_37.h5",
             "overwrite": false
         },
