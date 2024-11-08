@@ -1,0 +1,176 @@
+{
+    "photoZ": {
+        "Z_GRID": {
+            "z_min": 0.01,
+            "z_max": 6.1,
+            "z_step": 0.01
+        },
+        "Templates": {
+            "input": "/pbs/home/j/jocheval/ln_sps_photoz/jocheval/runProcessFors2/DSPS_hdf5_fit_mags+rews/fitparams_mags+rews_1_to_37.h5",
+            "output": "SEDtempl_SPS_mags+rews_1_to_37.h5",
+            "overwrite": false
+        },
+        "Mode": "SPS",
+        "Filters": {
+            "0": {
+                "name": "cosmos_u_cfht",
+                "path": "filters/u_cfht.lowres",
+                "transmission": "photons"
+            },
+            "1": {
+                "name": "cosmos_u_new",
+                "path": "filters/u_new.pb",
+                "transmission": "photons"
+            },
+            "2": {
+                "name": "hsc_gHSC",
+                "path": "filters/gHSC.pb",
+                "transmission": "photons"
+            },
+            "3": {
+                "name": "hsc_rHSC",
+                "path": "filters/rHSC.pb",
+                "transmission": "photons"
+            },
+            "4": {
+                "name": "hsc_iHSC",
+                "path": "filters/iHSC.pb",
+                "transmission": "photons"
+            },
+            "5": {
+                "name": "hsc_zHSC",
+                "path": "filters/zHSC.pb",
+                "transmission": "photons"
+            },
+            "6": {
+                "name": "hsc_yHSC",
+                "path": "filters/yHSC.pb",
+                "transmission": "photons"
+            },
+            "7": {
+                "name": "vista_Y",
+                "path": "filters/Y.lowres",
+                "transmission": "photons"
+            },
+            "8": {
+                "name": "vista_J",
+                "path": "filters/J.lowres",
+                "transmission": "photons"
+            },
+            "9": {
+                "name": "vista_H",
+                "path": "filters/H.lowres",
+                "transmission": "photons"
+            },
+            "10": {
+                "name": "vista_K",
+                "path": "filters/K.lowres",
+                "transmission": "photons"
+            },
+            "11": {
+                "name": "cosmos_IB427",
+                "path": "filters/IB427.lowres",
+                "transmission": "photons"
+            },
+            "12": {
+                "name": "cosmos_IB464",
+                "path": "filters/IB464.lowres",
+                "transmission": "photons"
+            },
+            "13": {
+                "name": "cosmos_IB484",
+                "path": "filters/IB484.lowres",
+                "transmission": "photons"
+            },
+            "14": {
+                "name": "cosmos_IB505",
+                "path": "filters/IB505.lowres",
+                "transmission": "photons"
+            },
+            "15": {
+                "name": "cosmos_IB527",
+                "path": "filters/IB527.lowres",
+                "transmission": "photons"
+            },
+            "16": {
+                "name": "cosmos_IB574",
+                "path": "filters/IB574.lowres",
+                "transmission": "photons"
+            },
+            "17": {
+                "name": "cosmos_IB624",
+                "path": "filters/IB624.lowres",
+                "transmission": "photons"
+            },
+            "18": {
+                "name": "cosmos_IB679",
+                "path": "filters/IB679.lowres",
+                "transmission": "photons"
+            },
+            "19": {
+                "name": "cosmos_IB709",
+                "path": "filters/IB709.lowres",
+                "transmission": "photons"},
+            "20": {
+                "name": "cosmos_IB738",
+                "path": "filters/IB738.lowres",
+                "transmission": "photons"
+            },
+            "21": {
+                "name": "cosmos_IB767",
+                "path": "filters/IB767.lowres",
+                "transmission": "photons"
+            },
+            "22": {
+                "name": "cosmos_IB827",
+                "path": "filters/IB827.lowres",
+                "transmission": "photons"
+            },
+            "23": {
+                "name": "cosmos_NB711",
+                "path": "filters/NB711.lowres",
+                "transmission": "photons"
+            },
+            "24": {
+                "name": "cosmos_NB816",
+                "path": "filters/NB816.lowres",
+                "transmission": "photons"
+            },
+            "25": {
+                "name": "vista_NB118",
+                "path": "filters/NB118.lowres",
+                "transmission": "photons"
+            },
+            "26": {
+                "name": "cosmos_irac_ch1",
+                "path": "filters/irac_ch1.lowres",
+                "transmission": "photons"
+            },
+            "27": {
+                "name": "cosmos_irac_ch2",
+                "path": "filters/irac_ch2.lowres",
+                "transmission": "photons"
+            },
+            "28": {
+                "name": "cosmos_irac_ch3",
+                "path": "filters/irac_ch3.lowres",
+                "transmission": "photons"
+            },
+            "29": {
+                "name": "cosmos_irac_ch4",
+                "path": "filters/irac_ch4.lowres",
+                "transmission": "photons"
+            }
+        },
+        "i_band_num": 4,
+        "Dataset": {
+            "path": "COSMOS2020_emu_CC.inp",
+            "type": "F"
+        },
+        "Estimator": "chi2",
+        "prior": true,
+        "use_colors": true,
+        "save results": true,
+        "run name": "process_fors2_pz_COSMOS2020"
+    }
+}
