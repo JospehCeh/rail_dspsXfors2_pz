@@ -5,8 +5,16 @@ Dev Guide - Getting Started
 Rail team recommendations
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+
+As of now, this should be installed as follows in the same `conda` 
+environment `[rail_env_name]` as the one used for `RAIL` installation :
+
 .. code-block:: console
 
+
+   >> onda activate [rail_env_name]
+   >> git clone https://github.com/JospehCeh/rail_dspsXfors2_pz.git
+   >> cd rail_dspsXfors2_pz
    >> pip install --no-cache-dir .
 
 
