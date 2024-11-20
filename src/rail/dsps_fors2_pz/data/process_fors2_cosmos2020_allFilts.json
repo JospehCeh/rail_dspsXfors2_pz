@@ -166,7 +166,7 @@
         "Dataset": {
             "path": "COSMOS2020_emu_CC.inp",
             "type": "F",
-            "format": "ASCII",
+            "is_ascii": true,
             "overwrite": true
         },
         "Estimator": "chi2",

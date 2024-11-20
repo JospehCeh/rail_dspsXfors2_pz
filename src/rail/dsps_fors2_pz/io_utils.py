@@ -254,7 +254,7 @@ def load_data_for_run(inp_glob):
     data_path = os.path.abspath(os.path.join(PZDATALOC, inputs["Dataset"]["path"]))
     data_ismag = inputs["Dataset"]["type"].lower() == "m"
 
-    if inputs["Dataset"]["format"].lower() == "ascii":
+    if inputs["Dataset"]["is_ascii"]:
         h5catpath = catalog_ASCIItoHDF5(data_path, data_ismag, filt_names=filters_names)
     else:
         h5catpath = data_path
