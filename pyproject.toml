@@ -28,6 +28,7 @@ dependencies = [
     "jaxlib",
     "interpax",
     "jax_cosmo",
+    "pandas",
     "pz-rail-dsps"
 ]
 
