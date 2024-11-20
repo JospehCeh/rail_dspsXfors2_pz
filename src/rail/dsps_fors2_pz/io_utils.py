@@ -12,6 +12,7 @@ import h5py
 import json
 import jax
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 from rail.dsps import load_ssp_templates
 from jax import numpy as jnp
@@ -128,54 +129,39 @@ def readTemplatesHDF5(h5file):
     return out_dict
 
 
-def photoZtoHDF5(outfilename, pz_list):
-    """photoZtoHDF5 Saves the pytree of photo-z results (list of dicts) in an HDF5 file.
+def photoZtoHDF5(outfilename, pz_out_dict):
+    """photoZtoHDF5 Saves the dictionary of `process_fors2.photoZ` outputs to an `HDF5` file.
 
     :param outfilename: Name of the `HDF5` file that will be written.
     :type outfilename: str or path-like object
-    :param pz_list: List of dictionaries containing the photo-z results.
-    :type pz_list: list
+    :param pz_out_dict: Dictionary of photo-z results : each item corresponds to the array of values of one result (identified by the key) for all input galaxies.
+    :type pz_out_dict: dict
     :return: Absolute path to the written file - if successful.
     :rtype: str or path-like object
     """
     fileout = os.path.abspath(outfilename)
 
     with h5py.File(fileout, "w") as h5out:
-        for i, posts_dic in enumerate(pz_list):
-            groupout = h5out.create_group(f"{i}")
-            groupout.create_dataset("PDZ", data=posts_dic.pop("PDZ"), compression="gzip", compression_opts=9)
-            groupout.attrs["z_spec"] = posts_dic.pop("z_spec")
-            groupout.attrs["z_ML"] = posts_dic.pop("z_ML")
-            groupout.attrs["z_mean"] = posts_dic.pop("z_mean")
-            groupout.attrs["z_med"] = posts_dic.pop("z_med")
-            for templ, tdic in posts_dic.items():
-                grp_sed = groupout.create_group(templ)
-                grp_sed.attrs["evidence_SED"] = tdic["evidence_SED"]
-                grp_sed.attrs["z_ML_SED"] = tdic["z_ML_SED"]
-                grp_sed.attrs["z_mean_SED"] = tdic["z_mean_SED"]
+        groupout = h5out.create_group("pz_outputs")
+        for key, jarray in pz_out_dict.items():
+            groupout.create_dataset(key, data=jarray, compression="gzip", compression_opts=9)
 
     ret = fileout if os.path.isfile(fileout) else f"Unable to write data to {outfilename}"
     return ret
 
 
 def readPhotoZHDF5(h5file):
-    """readPhotoZHDF5 Reads the photo-z results file and generates the corresponding pytree (list of dictionaries) for analysis.
+    """readPhotoZHDF5 Reads the photo-z results file and generates the corresponding pytree (dictionary) for analysis.
 
     :param h5file: Path to the HDF5 containing the photo-z results.
     :type h5file: str or path-like object
-    :return: List of photo-z results dicts as computed by process_fors2.photoZ.
-    :rtype: list
+    :return: Dictionary of photo-z results as computed by `process_fors2.photoZ`.
+    :rtype: dict
     """
     filein = os.path.abspath(h5file)
-    out_list = []
     with h5py.File(filein, "r") as h5in:
-        for key, grp in h5in.items():
-            obs_dict = {"PDZ": jnp.array(grp.get("PDZ")), "z_spec": grp.attrs.get("z_spec"), "z_ML": grp.attrs.get("z_ML"), "z_mean": grp.attrs.get("z_mean"), "z_med": grp.attrs.get("z_med")}
-            for templ, grp_sed in grp.items():
-                if "SPEC" in templ:
-                    obs_dict.update({templ: dict(grp_sed.attrs.items())})
-            out_list.append(obs_dict)
-    return out_list
+        pzout_dict = {key: jnp.array(jarray) for key, jarray in h5in.get("pz_outputs").items()}
+    return pzout_dict
 
 
 def readDSPSHDF5(h5file):
@@ -225,10 +211,10 @@ def load_data_for_run(inp_glob):
 
     :param inp_glob: input configuration and settings
     :type inp_glob: dict
-    :return: data for photo-z evaluation : redshift grid, templates dictionary and the list of observations
-    :rtype: tuple of jax.ndarray, dictionary, list
+    :return: data for photo-z evaluation : redshift grid, templates dictionary and the arrays of processed observed data (input catalog) (i mags ; colors ; errors on colors ; spectro-z).
+    :rtype: 6-tuple of jax.ndarray, dictionary, jax.ndarray, jax.ndarray, jax.ndarray, jax.ndarray
     """
-    from rail.dsps_fors2_pz import NIR_filt, NUV_filt, Observation, get_2lists, load_filt, load_galaxy, make_legacy_templates, make_sps_templates, sedpyFilter
+    from rail.dsps_fors2_pz import NIR_filt, NUV_filt, get_2lists, load_filt, make_legacy_templates, make_sps_templates, sedpyFilter
 
     _ssp_file = (
         None
@@ -245,7 +231,8 @@ def load_data_for_run(inp_glob):
         filters_dict[_f]["path"] = os.path.abspath(os.path.join(PZDATALOC, filters_dict[_f]["path"]))
     print("Loading filters :")
     filters_arr = tuple(sedpyFilter(*load_filt(int(ident), filters_dict[ident]["path"], filters_dict[ident]["transmission"])) for ident in tqdm(filters_dict)) + (NUV_filt, NIR_filt)
-    N_FILT = len(filters_arr) - 2
+
+    filters_names = [_f["name"] for _, _f in filters_dict.items()]
     # print(f"DEBUG: filters = {filters_arr}")
 
     print("Building templates :")
@@ -253,8 +240,7 @@ def load_data_for_run(inp_glob):
     # sps_temp_pkl = os.path.abspath(inputs["Templates"])
     # sps_par_dict = read_params(sps_temp_pkl)
     if inputs["Templates"]["overwrite"] or not os.path.isfile(os.path.abspath(inputs["Templates"]["output"])):
-        print("Creating new templates - please be patient, this may take several minutes to complete :")
-        sps_temp_h5 = os.path.abspath(os.path.join(PZDATALOC, inputs["Templates"]["input"]))
+        sps_temp_h5 = os.path.abspath(inputs["Templates"]["input"])
         sps_par_dict = readDSPSHDF5(sps_temp_h5)
         if "sps" in inputs["Mode"].lower():
             templ_dict = jax.tree_util.tree_map(lambda dico: make_sps_templates(dico, Xfilt, z_grid, ssp_data, id_imag=inputs["i_band_num"]), sps_par_dict, is_leaf=has_redshift)
@@ -262,29 +248,157 @@ def load_data_for_run(inp_glob):
             templ_dict = jax.tree_util.tree_map(lambda dico: make_legacy_templates(dico, Xfilt, z_grid, ssp_data, id_imag=inputs["i_band_num"]), sps_par_dict, is_leaf=has_redshift)
         _ = templatesToHDF5(inputs["Templates"]["output"], templ_dict)
     else:
-        print("Existing templates found ! Let us use those and save some time.")
         templ_dict = readTemplatesHDF5(inputs["Templates"]["output"])
 
     print("Loading observations :")
     data_path = os.path.abspath(os.path.join(PZDATALOC, inputs["Dataset"]["path"]))
     data_ismag = inputs["Dataset"]["type"].lower() == "m"
 
-    data_file_arr = np.loadtxt(data_path)
-    obs_arr = []
+    if inputs["Dataset"]["format"].lower() == "ascii":
+        h5catpath = catalog_ASCIItoHDF5(data_path, data_ismag, filt_names=filters_names)
+    else:
+        h5catpath = data_path
 
-    for i in tqdm(range(data_file_arr.shape[0])):
-        try:
-            assert (len(data_file_arr[i, :]) == 1 + 2 * N_FILT) or (
-                len(data_file_arr[i, :]) == 1 + 2 * N_FILT + 1
-            ), f"At least one filter is missing in datapoint {data_file_arr[i,0]} : length is {len(data_file_arr[i,:])}, {1+2*N_FILT} values expected.\nDatapoint removed from dataset."
-            # print(int(data_file_arr[i, 0]))
-            if len(data_file_arr[i, :]) == 1 + 2 * N_FILT + 1:
-                observ = Observation(int(data_file_arr[i, 0]), *load_galaxy(data_file_arr[i, 1 : 2 * N_FILT + 1], data_ismag, id_i_band=inputs["i_band_num"]), data_file_arr[i, 2 * N_FILT + 1])
-            else:
-                observ = Observation(int(data_file_arr[i, 0]), *load_galaxy(data_file_arr[i, 1 : 2 * N_FILT + 1], data_ismag, id_i_band=inputs["i_band_num"]), jnp.nan)
-            # print(observ.num)
-            obs_arr.extend([observ])
-        except AssertionError:
-            pass
-    print("All data loaded and ready for use !")
-    return z_grid, templ_dict, obs_arr
+    if inputs["Dataset"]["overwrite"] or not os.path.isfile(f"pz_inputs_{os.path.basename(h5catpath)}"):
+        ab_mags, ab_mags_errs, z_specs = readCatalogHDF5(h5catpath, filt_names=filters_names)
+
+        from .galaxy import vmap_mags_to_i_and_colors
+        i_mag_ab, ab_colors, ab_cols_errs = vmap_mags_to_i_and_colors(ab_mags, ab_mags_errs, inputs["i_band_num"])
+
+        clrh5file = f"pz_inputs_{os.path.basename(h5catpath)}"
+        _colrs_h5out = pzInputsToHDF5(clrh5file, ab_colors, ab_cols_errs, z_specs, i_mag_ab, filt_names=filters_names)
+    else:
+        i_mag_ab, ab_colors, ab_cols_errs, z_specs = readPZinputsHDF5(f"pz_inputs_{os.path.basename(h5catpath)}", filt_names=filters_names)
+
+    return z_grid, templ_dict, i_mag_ab, ab_colors, ab_cols_errs, z_specs
+
+
+def readCatalogHDF5(h5file, group="catalog", filt_names=None):
+    """readCatalogHDF5 Reads the magnitudes and spectroscopic redshift (if available) from a dictionary-like catalog provided as an `HDF5` file.
+    Preliminary step for the `process_fors2.photoZ` calculations.
+
+    :param h5file: Path to the HDF5 catalog file.
+    :type h5file: str or path-like
+    :param group: Identifier of the group to read within the `HDF5` file. This argument is passed to the `key` argument of `pandas.DataFrame.read_hdf`. Defaults to 'catalog'.
+    :type group: str, optional
+    :param filt_names: Names of filters to look for in the catalogs. Data recorded as `mag_[filter name]` and `mag_err_[filter name]` will be returned.
+    If None, defaults to LSST filters. Defaults to None.
+    :type filt_names: list of str, optional
+    :return: tuple containing AB magnitudes, corresponding errors and spectroscopic redshift as arrays.
+    :rtype: tuple of arrays
+    """
+    if filt_names is None:
+        filt_names = ["lsst_u", "lsst_g", "lsst_r", "lsst_i", "lsst_z", "lsst_y"]
+    df_cat = pd.read_hdf(os.path.abspath(h5file), key=group)
+    magnames = [f"mag_{filt}" for filt in filt_names]
+    magerrs = [f"mag_err_{filt}" for filt in filt_names]
+    obs_mags = jnp.array(df_cat[magnames])
+    obs_mags_errs = jnp.array(df_cat[magerrs])
+    try:
+        z_specs = jnp.array(df_cat["z_spec"])
+    except IndexError:
+        z_specs = jnp.full(obs_mags.shape[0], jnp.nan)
+    return obs_mags, obs_mags_errs, z_specs
+
+
+def catalog_ASCIItoHDF5(ascii_file, data_ismag, group="catalog", filt_names=None):
+    """catalog_ASCIItoHDF5 Reads a catalog provided as an ASCII file (as in LEPHARE) containing either fluxes or magnitudes and saves it in an `HDF5` file containing AB-magnitudes.
+
+    :param ascii_file: Path to the ASCII file containing catalog cata as an array that can be read with `numpy.loadtxt(ascii_file)`.
+    :type ascii_file: str or path-like
+    :param data_ismag: Whether the photometry in the file is given as AB-magnitudes or flux density (in erg/s/cm²/Hz). True for AB-magnitudes.
+    :type data_ismag: bool
+    :param group: Name of the group to write in the `HDF5` file. This argument is passed to the `key` argument of `pandas.DataFrame.to_hdf`. Defaults to 'catalog'.
+    :type group: str, optional
+    :param filt_names: Names of filters to use as column names in the catalog. Data will be recored as `mag_[filter name]` and `mag_err_[filter name]`.
+    If None, defaults to LSST filters. Defaults to None.
+    :type filt_names: list of str, optional
+    :return: Absolute path to the written file - if successful.
+    :rtype: str or path-like object
+    """
+    if filt_names is None:
+        filt_names = ["lsst_u", "lsst_g", "lsst_r", "lsst_i", "lsst_z", "lsst_y"]
+    magnames = [f"mag_{filt}" for filt in filt_names]
+    magerrs = [f"mag_err_{filt}" for filt in filt_names]
+    N_FILT = len(filt_names)
+    data_file_arr = np.loadtxt(os.path.abspath(ascii_file))
+    has_zspec = data_file_arr.shape[1] == 1 + 2 * N_FILT + 1
+    no_zspec = data_file_arr.shape[1] == 1 + 2 * N_FILT
+    assert has_zspec or no_zspec, "Number of column in data does not match one of 1 + 2*n_filts + 1 (id, photometry, z_spec) or 1 + 2*n_filts (id, photometry).\
+        \nReview data or filters list."
+
+    from .galaxy import vmap_load_magnitudes
+
+    all_mags, all_mags_err = vmap_load_magnitudes(data_file_arr[:, 1 : 2 * N_FILT + 1], data_ismag)
+
+    all_zs = data_file_arr[:, -1] if has_zspec else jnp.full(all_mags.shape[0], jnp.nan)
+
+    df_mags = pd.DataFrame(columns=magnames + magerrs + ["z_spec"], data=jnp.column_stack((all_mags, all_mags_err, all_zs)))
+
+    hdf_name = f"{os.path.splitext(os.path.basename(ascii_file))[0]}.h5"
+    outfilename = os.path.abspath(hdf_name)
+    df_mags.to_hdf(outfilename, key=group)
+    respath = outfilename if os.path.isfile(outfilename) else f"Unable to write data to {outfilename}"
+    return respath
+
+
+def pzInputsToHDF5(h5file, clrs_ind, clrs_ind_errs, z_specs, i_mags, filt_names=None):
+    """pzInputsToHDF5 Saves the photometry inputs as processed for the `process_fors2.photoZ` module, *i.e.* color indices, associated errors and spectro-z if available.
+    Filter names must match those used for the photo-z estimation. Allows not to reprocess the catalog everytime the code is used on a similar dataset.
+
+    :param h5file: Name for the HDF5 inputs file to be written.
+    :type h5file: str or path-like
+    :param clrs_ind: Array of color indices in magnitudes units
+    :type clrs_ind: array
+    :param clrs_ind_errs: Array of error on color indices in magnitudes units
+    :type clrs_ind_errs: array
+    :param z_specs: Array of spectroscopic redshifts (`jnp.nan` if unavailable in the catalog)
+    :type z_specs: array
+    :param i_mags: Array of magnitudes in i-band for nz prior computation.
+    :type i_mags: array
+    :param filt_names: Names of filters to use as column names in the catalog.
+    Color indices will be recorded as `[filter name i]-[filter name i+1]` and `[filter name i]-[filter name i+1]_err`.
+    If None, defaults to LSST filters. Defaults to None.
+    :type filt_names: list of str, optional
+    :return: Absolute path to the written file - if successful.
+    :rtype: str or path-like object
+    """
+    if filt_names is None:
+        filt_names = ["lsst_u", "lsst_g", "lsst_r", "lsst_i", "lsst_z", "lsst_y"]
+
+    color_names = [f"{n1}-{n2}" for (n1, n2) in zip(filt_names[:-1], filt_names[1:], strict=True)]
+
+    color_err_names = [f"{n1}-{n2}_err" for (n1, n2) in zip(filt_names[:-1], filt_names[1:], strict=True)]
+
+    df_clrs = pd.DataFrame(columns=color_names + color_err_names + ["i_mag", "z_spec"], data=jnp.column_stack((clrs_ind, clrs_ind_errs, i_mags, z_specs)))
+    outfilename = os.path.abspath(h5file)
+    df_clrs.to_hdf(outfilename, "pz_inputs")
+    respath = outfilename if os.path.isfile(outfilename) else f"Unable to write data to {outfilename}"
+    return respath
+
+
+def readPZinputsHDF5(h5file, filt_names=None):
+    """readPZinputsHDF5 Reads pre-existing photometry inputs for the `process_fors2.photoZ` module, *i.e.* color indices, associated errors and spectro-z if available.
+    Filter names must match those used for the photo-z estimation. Allows not to reprocess the catalog everytime the code is used on a similar dataset.
+
+    :param h5file: Path to the HDF5 inputs file.
+    :type h5file: str or path-like
+    :param filt_names: Names of filters to look for in the catalogs. Color indices `[filter name i]-[filter name i+1]` and `[filter name i]-[filter name i+1]_err` will be returned.
+    If None, defaults to LSST filters. Defaults to None.
+    :type filt_names: list of str, optional
+    :return: 4-tuple of JAX arrays containing data to perform photo-z estimation (`jnp.nan` if missing) : mags in i-band ; color indices ; associated errors and spectro-z.
+    :rtype: tuple(arrays)
+    """
+    if filt_names is None:
+        filt_names = ["lsst_u", "lsst_g", "lsst_r", "lsst_i", "lsst_z", "lsst_y"]
+
+    color_names = [f"{n1}-{n2}" for (n1, n2) in zip(filt_names[:-1], filt_names[1:], strict=True)]
+
+    color_err_names = [f"{n1}-{n2}_err" for (n1, n2) in zip(filt_names[:-1], filt_names[1:], strict=True)]
+
+    df_clrs = pd.read_hdf(os.path.abspath(h5file), key="pz_inputs")
+    colrs = jnp.array(df_clrs[color_names])
+    colrs_errs = jnp.array(df_clrs[color_err_names])
+    i_mags = jnp.array(df_clrs["i_mag"])
+    z_specs = jnp.array(df_clrs["z_spec"])
+    return i_mags, colrs, colrs_errs, z_specs

@@ -47,7 +47,9 @@
         "i_band_num": 3,
         "Dataset": {
             "path": "COSMOS2020_emu_hscOnly_CC_zinf3_noNaN.inp",
-            "type": "F"
+            "type": "F",
+            "format": "ASCII",
+            "overwrite": true
         },
         "Estimator": "chi2",
         "prior": true,
