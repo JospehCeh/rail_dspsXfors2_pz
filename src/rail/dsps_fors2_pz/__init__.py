@@ -8,6 +8,8 @@ from .galaxy import (
     likelihood,
     likelihood_fluxRatio,
     load_galaxy,
+    load_magnitudes,
+    mags_to_i_and_colors,
     neg_log_likelihood,
     neg_log_posterior,
     posterior,
@@ -15,6 +17,8 @@ from .galaxy import (
     val_neg_log_likelihood,
     val_neg_log_posterior,
     vmap_chi_term,
+    vmap_load_magnitudes,
+    vmap_mags_to_i_and_colors,
     vmap_neg_log_likelihood,
     vmap_neg_log_posterior,
     vmap_nz_prior,
@@ -23,7 +27,23 @@ from .galaxy import (
 from .template import BaseTemplate, SPS_Templates, make_legacy_templates, make_sps_templates, templ_mags, templ_mags_legacy, v_mags, v_mags_legacy
 from .met_weights_age_dep import calc_rest_sed_sfh_table_lognormal_mdf_agedep
 from .dsps_params import SSPParametersFit, paramslist_to_dict
-from .io_utils import PZDATALOC, DEFAULTS_DICT, json_to_inputs, load_ssp, templatesToHDF5, readTemplatesHDF5, photoZtoHDF5, readPhotoZHDF5, readDSPSHDF5, has_redshift, load_data_for_run
+from .io_utils import (
+    PZDATALOC,
+    DEFAULTS_DICT,
+    json_to_inputs,
+    load_ssp,
+    templatesToHDF5,
+    readTemplatesHDF5,
+    photoZtoHDF5,
+    readPhotoZHDF5,
+    readDSPSHDF5,
+    has_redshift,
+    load_data_for_run,
+    readCatalogHDF5,
+    catalog_ASCIItoHDF5,
+    readPZinputsHDF5,
+    pzInputsToHDF5
+)
 
 __all__ = [
     "PZDATALOC",
@@ -60,11 +80,15 @@ __all__ = [
     "prior_ft",
     "Observation",
     "load_galaxy",
+    "load_magnitudes",
+    "mags_to_i_and_colors",
     "chi_term",
     "col_to_fluxRatio",
     "neg_log_posterior",
     "val_neg_log_posterior",
     "vmap_chi_term",
+    "vmap_load_magnitudes",
+    "vmap_mags_to_i_and_colors",
     "vmap_neg_log_posterior",
     "vmap_nz_prior",
     "z_prior_val",
@@ -82,6 +106,10 @@ __all__ = [
     "photoZtoHDF5",
     "readPhotoZHDF5",
     "readDSPSHDF5",
+    "readCatalogHDF5",
+    "catalog_ASCIItoHDF5",
+    "readPZinputsHDF5",
+    "pzInputsToHDF5",
     "has_redshift",
     "run_from_inputs"
 ]

@@ -9,6 +9,14 @@ import jax.numpy as jnp
 import numpy as np
 from jax import jit
 
+try:
+    from jax.numpy import trapezoid
+except ImportError:
+    try:
+        from jax.scipy.integrate import trapezoid
+    except ImportError:
+        from jax.numpy import trapz as trapezoid
+
 lightspeed = 2.998e18  # AA/s
 ab_gnu = 3.631e-20  # AB reference spctrum in erg/s/cm^2/Hz
 
@@ -53,7 +61,7 @@ def lambda_mean(wls, trans):
     :return: the mean wavelength of the filter wrt transmission values
     :rtype: float
     """
-    mean_wl = jnp.trapezoid(wls * trans, wls) / jnp.trapezoid(trans, wls)
+    mean_wl = trapezoid(wls * trans, wls) / trapezoid(trans, wls)
     return mean_wl
 
 
@@ -145,10 +153,10 @@ def noJit_get_properties(filtwave, filttransm):
     of many of these quantities.
     """
     # Calculate some useful integrals
-    i0 = jnp.trapezoid(filttransm * jnp.log(filtwave), x=jnp.log(filtwave))
-    i1 = jnp.trapezoid(filttransm, x=jnp.log(filtwave))
-    i2 = jnp.trapezoid(filttransm * filtwave, x=filtwave)
-    i3 = jnp.trapezoid(filttransm, x=filtwave)
+    i0 = trapezoid(filttransm * jnp.log(filtwave), x=jnp.log(filtwave))
+    i1 = trapezoid(filttransm, x=jnp.log(filtwave))
+    i2 = trapezoid(filttransm * filtwave, x=filtwave)
+    i3 = trapezoid(filttransm, x=filtwave)
 
     wave_effective = jnp.exp(i0 / i1)
     wave_pivot = jnp.sqrt(i2 / i1)  # noqa: F841
@@ -156,7 +164,7 @@ def noJit_get_properties(filtwave, filttransm):
     wave_average = i2 / i3  # noqa: F841
     rectangular_width = i3 / jnp.max(filttransm)  # noqa: F841
 
-    i4 = jnp.trapezoid(filttransm * jnp.power((jnp.log(filtwave / wave_effective)), 2.0), x=jnp.log(filtwave))
+    i4 = trapezoid(filttransm * jnp.power((jnp.log(filtwave / wave_effective)), 2.0), x=jnp.log(filtwave))
     gauss_width = jnp.power((i4 / i1), 0.5)
     effective_width = 2.0 * jnp.sqrt(2.0 * jnp.log(2.0)) * gauss_width * wave_effective  # noqa: F841
 
@@ -178,10 +186,10 @@ def get_properties(filtwave, filttransm):
     of many of these quantities.
     """
     # Calculate some useful integrals
-    i0 = jnp.trapezoid(filttransm * jnp.log(filtwave), x=jnp.log(filtwave))
-    i1 = jnp.trapezoid(filttransm, x=jnp.log(filtwave))
-    i2 = jnp.trapezoid(filttransm * filtwave, x=filtwave)
-    i3 = jnp.trapezoid(filttransm, x=filtwave)
+    i0 = trapezoid(filttransm * jnp.log(filtwave), x=jnp.log(filtwave))
+    i1 = trapezoid(filttransm, x=jnp.log(filtwave))
+    i2 = trapezoid(filttransm * filtwave, x=filtwave)
+    i3 = trapezoid(filttransm, x=filtwave)
 
     wave_effective = jnp.exp(i0 / i1)
     wave_pivot = jnp.sqrt(i2 / i1)  # noqa: F841
@@ -189,7 +197,7 @@ def get_properties(filtwave, filttransm):
     wave_average = i2 / i3  # noqa: F841
     rectangular_width = i3 / jnp.max(filttransm)  # noqa: F841
 
-    i4 = jnp.trapezoid(filttransm * jnp.power((jnp.log(filtwave / wave_effective)), 2.0), x=jnp.log(filtwave))
+    i4 = trapezoid(filttransm * jnp.power((jnp.log(filtwave / wave_effective)), 2.0), x=jnp.log(filtwave))
     gauss_width = jnp.power((i4 / i1), 0.5)
     effective_width = 2.0 * jnp.sqrt(2.0 * jnp.log(2.0)) * gauss_width * wave_effective  # noqa: F841
 
@@ -244,7 +252,7 @@ def noJit_obj_counts_hires(filtwave, filt_trans, sourcewave, sourceflux):
     newtrans = jnp.interp(sourcewave, filtwave, filt_trans, left=0.0, right=0.0, period=None)
 
     # Integrate lambda*f_lambda*R
-    counts = jnp.trapezoid(sourcewave * newtrans * sourceflux, x=sourcewave)
+    counts = trapezoid(sourcewave * newtrans * sourceflux, x=sourcewave)
     return counts
 
 
@@ -269,7 +277,7 @@ def obj_counts_hires(filtwave, filt_trans, sourcewave, sourceflux):
     newtrans = jnp.interp(sourcewave, filtwave, filt_trans, left=0.0, right=0.0, period=None)
 
     # Integrate lambda*f_lambda*R
-    counts = jnp.trapezoid(sourcewave * newtrans * sourceflux, x=sourcewave)
+    counts = trapezoid(sourcewave * newtrans * sourceflux, x=sourcewave)
     return counts
 
 
